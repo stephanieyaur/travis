@@ -130,10 +130,11 @@ function holdingOffense(data){
     return true;
 }
 
-function check_eligibility(idocNum){
+function check_eligibility(idocNum, medical_furlough){
     let data = get_idocData(idocNum)
-    if (data === "Invalid IDOC number input") return
+    if (data === "Invalid IDOC number input") return [];
     let outcome = [];
+    if (data.sentence_years === 'LIFE') return [];
     //outcome is an array of what this person may be eligible for
 
     //release for medical furlough
@@ -142,27 +143,38 @@ function check_eligibility(idocNum){
     //     //if have any of these medical conditions https://www.cdc.gov/coronavirus/2019-ncov/need-extra-precautions/people-at-higher-risk.html
     // }
 
-    //release for home detention
+    // if they check that they're eligible for medical furlough 730 ILCS 5/3-11-1(a)(2)
+    if (medical_furlough){
+        outcome.push(" Medical Furlough")
+    }
+
+    //electronic monitoring or home detention 730 ILCS 5/5-8A-3(d)
     if (age(data) >= 55){
+        outcome.push(" Over 55 years of age")
         if (sentenceRemaining(data)<=1){
+            outcome.push(" Less than 12 months left on sentence")
             if (sentenceServed(data) >= 0.25*(data.sentence_years + data.sentence_months/12)){
+                outcome.push(" Served at least 25% of prison term")
                 if (sexCrime(data) === false){
-                    outcome.push(" Home Detention")
+                    outcome.push(" Not a excluded offense")
+                    outcome.push(" EM or HD 1")
                 }
             }
         }
     }
 
-    //electronic monitoring or home detention program
+    //electronic monitoring or home detention 730 ILCS 5/5-8A-3(e)
     if (crimeClass(data) === 2 || crimeClass(data)===3 || crimeClass(data)===4){
+        outcome.push(" Convicted of Class 2, 3, or 4 felony offense")
         if (holdingOffense(data) === true){
-            outcome.push(" Electric Monitoring");
+            outcome.push(" Not an excluded offense Electronic")
+            outcome.push(" EM or HD 2");
             var i;
             for (i=0; i < outcome.length; i++){
-                if (outcome[i] === (" Home Detention")) break;
+                if (outcome[i] === (" EM or HD 1")) break;
             }
             if (i === outcome.length) {
-                outcome.push(" Home Detention");
+                outcome.push(" EM or HD 1");
             }
         }
     }
@@ -173,10 +185,10 @@ function check_eligibility(idocNum){
 };
 
 
-function return_eligibility(idocNum){
+function return_eligibility(idocNum, medical_furlough){
     let data = get_idocData(idocNum);
     if (data === "Invalid IDOC number input") return
-    let outcome = check_eligibility(idocNum);
+    let outcome = check_eligibility(idocNum, medical_furlough);
     if (outcome.length === 0){
         outcome = "None"
     }

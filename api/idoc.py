@@ -78,6 +78,10 @@ def getIdocProfile(idoc):
     for sentence in sentences:
         print(sentence)
         tmp = sentence['sentence'].split()
+        if 'LIFE' in tmp[0]:
+            length = ['LIFE', 0]
+            longestSent = sentence
+            break
         years = int(tmp[0])
         months = int(tmp[2])
         if years > length[0]:
